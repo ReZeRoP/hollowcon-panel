@@ -1,0 +1,42 @@
+# Render Blueprint — deploy the Proxy Panel with one click.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Render routes HTTP/TCP only (no public UDP):
+#   * Hysteria2 (UDP)  -> NOT reachable here (RUN_HYSTERIA=0). Point PUBLIC_HOST at a UDP host.
+#   * VLESS-over-WS     -> WORKS here (rides Render's HTTPS edge). RUN_XRAY=1.
+#   * VLESS-over-TCP    -> NOT reachable via the HTTP edge (use a VPS for that).
+# Xray fronts $PORT and falls back to the FastAPI panel on the same domain.
+services:
+  - type: web
+    name: proxy-panel
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /healthz
+    autoDeploy: true
+    disk:
+      name: proxy-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: RUN_HYSTERIA
+        value: "0"            # no public UDP on Render
+      - key: RUN_XRAY
+        value: "1"            # VLESS-WS works on Render
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        generateValue: true   # Render creates a strong password; view in dashboard.
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PUBLIC_HOST
+        sync: false           # set to your Render domain, e.g. proxy-panel.onrender.com
+      - key: VLESS_WS_PATH
+        value: /vless-ws
+      - key: VLESS_PUBLIC_PORT
+        value: "443"          # clients dial the HTTPS edge port
+      - key: VLESS_TLS
+        value: "1"            # Render terminates TLS at the edge
+      # For actual Hysteria2 proxying, point these at a UDP-capable host:
+      - key: HYSTERIA_PORT
+        value: "443"

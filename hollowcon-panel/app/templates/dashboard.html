@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Proxy Panel{% endblock %}
+{% block body %}
+<header class="topbar">
+  <h1>⚡ Proxy Panel</h1>
+  <div class="topbar-actions">
+    <a class="btn ghost" href="/server-config.yaml" target="_blank">Hysteria2 config</a>
+    <a class="btn ghost" href="/xray-config.json" target="_blank">Xray config</a>
+    <a class="btn ghost" href="/logout">Logout</a>
+  </div>
+</header>
+
+<section class="status-grid">
+  <div class="card stat">
+    <span class="stat-label">Public host</span>
+    <span class="stat-value">{{ settings.public_host }}</span>
+  </div>
+  <div class="card stat">
+    <span class="stat-label">Hysteria2 · UDP {{ settings.hysteria_port }}</span>
+    {% if hy_available %}
+      <span class="stat-value {{ 'ok' if hy_running else 'warn' }}">{{ 'Running' if hy_running else 'Stopped' }}</span>
+    {% else %}
+      <span class="stat-value muted">Off (needs UDP host)</span>
+    {% endif %}
+  </div>
+  <div class="card stat">
+    <span class="stat-label">VLESS · TCP {{ settings.vless_public_port }}</span>
+    {% if xray_available %}
+      <span class="stat-value {{ 'ok' if xray_running else 'warn' }}">{{ 'Running' if xray_running else 'Stopped' }}</span>
+    {% else %}
+      <span class="stat-value muted">Off (Xray disabled)</span>
+    {% endif %}
+  </div>
+  <div class="card stat">
+    <span class="stat-label">Subscription</span>
+    <a class="stat-value link" href="{{ sub_url }}" target="_blank">/sub</a>
+  </div>
+</section>
+
+<section class="card">
+  <div class="proto-legend">
+    <span class="pill hy">Hysteria2</span> UDP/QUIC · fastest, needs UDP host &nbsp;•&nbsp;
+    <span class="pill ws">VLESS-WS</span> works on Render/Railway &nbsp;•&nbsp;
+    <span class="pill tcp">VLESS-TCP</span> raw TCP, best on a VPS
+  </div>
+</section>
+
+<section class="card">
+  <h2>Add client</h2>
+  <form method="post" action="/users/create" class="row-form">
+    <input type="text" name="name" placeholder="client name (e.g. phone)" required />
+    <input type="text" name="note" placeholder="note (optional)" />
+    <button class="btn primary" type="submit">Create</button>
+  </form>
+  <p class="muted small">Each client gets a Hysteria2 password <b>and</b> a VLESS UUID automatically.</p>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Clients ({{ users|length }})</h2>
+    <form method="post" action="/server/restart">
+      <button class="btn ghost" type="submit">↻ Restart proxies</button>
+    </form>
+  </div>
+
+  {% if users %}
+  <div class="table-wrapper">
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Status</th><th>Note</th><th class="right">Actions</th></tr>
+    </thead>
+    <tbody>
+    {% for u in users %}
+      <tr>
+        <td><a class="link" href="/users/{{ u.id }}">{{ u.name }}</a></td>
+        <td>
+          <span class="badge {{ 'on' if u.enabled else 'off' }}">{{ 'Enabled' if u.enabled else 'Disabled' }}</span>
+        </td>
+        <td class="muted">{{ u.note or '—' }}</td>
+        <td class="right actions">
+          <a class="btn tiny" href="/users/{{ u.id }}">Links / QR</a>
+          <form method="post" action="/users/{{ u.id }}/toggle" class="inline">
+            <button class="btn tiny ghost" type="submit">{{ 'Disable' if u.enabled else 'Enable' }}</button>
+          </form>
+          <form method="post" action="/users/{{ u.id }}/delete" class="inline"
+                onsubmit="return confirm('Delete {{ u.name }}?');">
+            <button class="btn tiny danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="muted">No clients yet. Add one above to generate connection links.</p>
+  {% endif %}
+</section>
+{% endblock %}

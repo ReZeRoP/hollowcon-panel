@@ -1,0 +1,30 @@
+# For running the FULL stack (panel + hysteria2 + VLESS) on a VPS / capable host.
+services:
+  proxy-panel:
+    build: .
+    image: proxy-panel:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"        # Xray front: panel + VLESS-WS + VLESS-TCP (TCP)
+      - "443:443/udp"      # hysteria2 proxy (UDP!)
+    environment:
+      # --- panel ---
+      ADMIN_USERNAME: "admin"
+      ADMIN_PASSWORD: "change-me-please"
+      PUBLIC_HOST: "your-domain-or-ip"
+      # --- hysteria2 (UDP) ---
+      RUN_HYSTERIA: "1"
+      HYSTERIA_PORT: "443"
+      OBFS_PASSWORD: "pick-a-strong-obfs-password"
+      SELF_SIGNED: "1"
+      # --- VLESS (Xray) ---
+      RUN_XRAY: "1"
+      PORT: "8080"              # Xray front port inside the container
+      VLESS_WS_PATH: "/vless-ws"
+      VLESS_PUBLIC_PORT: "8080" # port clients dial for VLESS on this VPS
+      VLESS_TLS: "0"            # no TLS in front on a bare VPS; set 1 behind a TLS proxy
+    volumes:
+      - proxy-data:/data
+
+volumes:
+  proxy-data:

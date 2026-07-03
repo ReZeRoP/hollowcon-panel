@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ user.name }} · Proxy Panel{% endblock %}
+{% block body %}
+<header class="topbar">
+  <h1>Client · {{ user.name }}</h1>
+  <a class="btn ghost" href="/">← Back</a>
+</header>
+
+<p class="muted small">VLESS UUID: <code>{{ user.uuid }}</code></p>
+
+{% for p in protocols %}
+<section class="card">
+  <div class="proto-head">
+    <h2>{{ p.label }}</h2>
+    <span class="pill {{ 'hy' if p.key=='hysteria2' else ('ws' if p.key=='vless_ws' else 'tcp') }}">{{ p.key }}</span>
+  </div>
+  <p class="muted small">{{ p.note }}</p>
+
+  <div class="detail-grid">
+    <div class="qr-col">
+      <img class="qr" src="{{ p.qr }}" alt="QR code" />
+    </div>
+    <div class="link-col">
+      <div class="copy-box">
+        <code id="uri-{{ p.key }}">{{ p.uri }}</code>
+        <button class="btn tiny" onclick="copyText('uri-{{ p.key }}')">Copy</button>
+      </div>
+      {% if p.config %}
+      <div class="copy-box">
+        <pre id="cfg-{{ p.key }}">{{ p.config }}</pre>
+        <button class="btn tiny" onclick="copyText('cfg-{{ p.key }}')">Copy</button>
+      </div>
+      <a class="btn ghost" href="/users/{{ user.id }}/config.yaml" target="_blank">Download config.yaml</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endfor %}
+
+<script>
+function copyText(id){
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.innerText).then(()=>{
+    event.target.innerText = 'Copied!';
+    setTimeout(()=>event.target.innerText='Copy', 1500);
+  });
+}
+</script>
+{% endblock %}

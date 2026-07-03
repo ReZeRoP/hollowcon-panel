@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Login · Hysteria2 Panel{% endblock %}
+{% block body %}
+<div class="login-card">
+  <h1>⚡ Hysteria2 Panel</h1>
+  <p class="muted">Sign in to manage your proxy</p>
+  {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+  <form method="post" action="/login">
+    <label>Username</label>
+    <input type="text" name="username" autocomplete="username" required autofocus />
+    <label>Password</label>
+    <input type="password" name="password" autocomplete="current-password" required />
+    <button type="submit" class="btn primary full">Sign in</button>
+  </form>
+</div>
+{% endblock %}
